@@ -17,3 +17,4 @@ int indexed_sequential_search(T_DataSet data, int search_key, int qtd_index);
 void printArray(T_DataSet data_set);
 
 void printLine();
+
