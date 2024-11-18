@@ -1,6 +1,8 @@
 #include "dataset.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
 
 struct DataSet {
     int size;
@@ -11,6 +13,7 @@ struct IndexTable {
     int start;
     int end;
 };
+
 
 // Criar o DataSet
 T_DataSet create_data_set(int seed, int size) {
@@ -25,7 +28,7 @@ T_DataSet create_data_set(int seed, int size) {
         exit(EXIT_FAILURE);
     }
 
-    unsigned int *arr = malloc((size + 10) * sizeof(unsigned int));
+    unsigned int *arr = malloc((size + 1) * sizeof(unsigned int));
     if (arr == NULL) {
         perror("Falha na alocação de memória para o array de dados");
         free(data_set);
@@ -33,13 +36,39 @@ T_DataSet create_data_set(int seed, int size) {
     }
 
     arr[0] = seed;
+    srand(seed);
     for (unsigned int i = 1; i < size; i++) {
-        arr[i] = arr[i - 1] + ((arr[0] / 100)) + 1;
+        arr[i] = arr[i - 1] + ((rand() % 100)) + 1;
     }
 
     data_set->data = arr;
     data_set->size = size;
+    if(DEBUG == 1){
+        printf("First element : [%d]\n",data_set->data[0]);
+        printf("Middle element : [%d]\n",data_set->data[size/2]);
+        printf("Last element : [%d]\n",data_set->data[size-1]);
+    }
     return data_set;
+}
+
+int sequential_search_range(T_DataSet data, int search_key, int start, int end){
+    for (int i = start; i <= end; i++) {
+        if (data->data[i] == search_key) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+int sequential_search(T_DataSet data, int search_key){
+    for (int i = 0; i < data->size; i++) {
+        if (data->data[i] == search_key) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 // Calcula qual o tamanho do bloco
@@ -102,6 +131,9 @@ T_IndexTable create_index_table(T_DataSet data, int original_start, int original
 
     table->start = start;
     table->end = end;
+    if(DEBUG == 1){
+        printf("BlockSize: %d \nStart: %d End: %d \n", blocksize, start, end);
+    }
     return table;
 }
 
@@ -118,6 +150,9 @@ int indexed_sequential_search(T_DataSet data, int search_key, int indexes_qtt) {
 
     int start = 0, end = data->size;
     for (int i = 0; i < indexes_qtt; i++) {
+        if(DEBUG == 1){
+            printf("Processo da Tabela Index: %d\n",i);
+        }
         int block_size = calculate_block_size(start, end);
         T_IndexTable index = create_index_table(data, 0, data->size, block_size, search_key);
         start = index->start;
@@ -125,16 +160,10 @@ int indexed_sequential_search(T_DataSet data, int search_key, int indexes_qtt) {
         free(index);
     }
 
-    for (int i = start; i <= end; i++) {
-        if (data->data[i] == search_key) {
-            return i;
-        }
-    }
-
-    return -1;
+    return sequential_search_range(data, search_key, start, end);
 }
 
-// Imprime array
+// Utilidades para print
 void printArray(T_DataSet ds) {
     if (ds == NULL || ds->data == NULL) {
         printf("DataSet inválido.\n");
@@ -147,3 +176,6 @@ void printArray(T_DataSet ds) {
     printf("];\n");
 }
 
+void printLine(){
+    printf("-------------------------------------------------------------------\n");
+}
